@@ -12,18 +12,18 @@
   <remote name="openembedded" fetch="https://git.openembedded.org/" />
 
   <!-- defaults -->
-  <default remote="agl" sync-j="4" revision="refs/tags/pike/16.0.2"/>
-
-
+  <default remote="agl" sync-j="4" revision="refs/tags/pike/16.0.2"/>  
+  
+  
   <!-- CORE -->
   <!-- use agl revisions/branches here -->
 
   <!-- AGL things. -->
   <project name="AGL/meta-agl" path="meta-agl" />
   <project name="AGL/meta-agl-demo" path="meta-agl-demo" />
-  <project name="AGL/meta-agl-devel" path="meta-agl-devel" />
-
-
+  <project name="AGL/meta-agl-devel" path="meta-agl-devel" />  
+  
+  
   <!-- ALL EXTERNAL REPOS BELOW USE A FIXED REVISION ! -->
 
   <!-- YOCTO & OE -->
@@ -31,9 +31,9 @@
   <!-- Yocto/OpenEmbedded things. -->
   <project name="poky" path="external/poky" remote="yocto" revision="e51bf557f596c4da38789a948a3228ba11455e3c" upstream="kirkstone" />
   <project name="openembedded/meta-openembedded" path="external/meta-openembedded" remote="github" revision="9c5541f7e18a1fac3b8dea71e1ebb8398d58e6ff" upstream="kirkstone" />
-  <project name="meta-lts-mixins" path="external/meta-lts-mixins_rust-1.68" remote="yocto" revision="59fd1bd537f501f93df7d1e46a103bf8f2195ed3" upstream="kirkstone/rust-1.68" />
-
-
+  <project name="meta-lts-mixins" path="external/meta-lts-mixins_rust-1.68" remote="yocto" revision="59fd1bd537f501f93df7d1e46a103bf8f2195ed3" upstream="kirkstone/rust-1.68" /> 
+  
+  
   <!-- UPSTREAM COMPONENTS -->
 
   <!-- meta-virtualization -->
@@ -96,7 +96,7 @@
 
   <!-- meta-aws -->
   <remote fetch="https://github.com/aws4embeddedlinux/" name="aws"/>
-  <project name="meta-aws" remote="aws" path="external/meta-aws" upstream="kirkstone" revision="a1aec268e6935a1bf7c7cae5166491551bdade5d" />
+  <project name="meta-aws" remote="aws" path="external/meta-aws" upstream="kirkstone" revision="69ce4703994cdd95d14bc89fe1e3475c4f2be090" />
 
   <!-- meta-aws-iot-automotive-demo -->
   <remote fetch="https://github.com/aws4embeddedlinux/" name="demo-iot-automotive-embeddedlinux-image"/>
