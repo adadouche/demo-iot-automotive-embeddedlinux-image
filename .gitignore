@@ -8,3 +8,12 @@ cdk.out
 cdk.context.json
 /demo-iot-automotive-embeddedlinux-image.iml
 *.iml
+
+cdk/claim-certs
+cdk/repo_seed/site.conf
+
+# in case you are building with bitbake locally
+/.repo/
+/bsp
+/external
+/meta-

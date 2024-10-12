@@ -23,9 +23,10 @@ phases:
       - echo copy site.conf
       - cp $CODEBUILD_SRC_DIR/site.conf $TMP_DIR/conf/
       - echo get claim certs
-      - aws secretsmanager get-secret-value --secret-id EC2AMIBigaPipeline_claim.cert.pem --query SecretBinary --output text | base64 --decode > $CODEBUILD_SRC_DIR/external/meta-aws/recipes-iot/aws-iot-greengrass/files/claim.cert.pem
-      - aws secretsmanager get-secret-value --secret-id EC2AMIBigaPipeline_claim.cert.pem --query SecretBinary --output text | base64 --decode > $CODEBUILD_SRC_DIR/external/meta-aws/recipes-iot/aws-iot-greengrass/files/claim.pkey.pem
-      - aws secretsmanager get-secret-value --secret-id EC2AMIBigaPipeline_claim.cert.pem --query SecretBinary --output text | base64 --decode > $CODEBUILD_SRC_DIR/external/meta-aws/recipes-iot/aws-iot-greengrass/files/claim.root.pem
+      - mkdir -p $CODEBUILD_SRC_DIR/external/meta-aws/recipes-iot/aws-iot-greengrass/files/
+      - aws ssm get-parameter --name EC2AMIBigaPipeline_claim.cert.pem --query Parameter.Value --output text > $CODEBUILD_SRC_DIR/external/meta-aws/recipes-iot/aws-iot-greengrass/files/claim.cert.pem
+      - aws ssm get-parameter --name EC2AMIBigaPipeline_claim.pkey.pem --query Parameter.Value --output text > $CODEBUILD_SRC_DIR/external/meta-aws/recipes-iot/aws-iot-greengrass/files/claim.pkey.pem
+      - aws ssm get-parameter --name EC2AMIBigaPipeline_claim.root.pem --query Parameter.Value --output text > $CODEBUILD_SRC_DIR/external/meta-aws/recipes-iot/aws-iot-greengrass/files/claim.root.pem
       - echo build started at `date`
       - bitbake  aws-biga-image
       - bitbake  aws-biga-image -c populate_sdk

@@ -14,6 +14,23 @@ change into cdk dir - all following steps from the README are performed there.
 cd cdk
 ```
 ### Setting Up
+
+##### Create claim certificate
+
+```bash
+export CERTIFICATE_PATH=claim-certs
+mkdir -p $CERTIFICATE_PATH
+
+export CERTIFICATE_ARN=$(aws iot create-keys-and-certificate \
+    --certificate-pem-outfile "$CERTIFICATE_PATH/claim.cert.pem" \
+    --public-key-outfile "$CERTIFICATE_PATH/claim.pubkey.pem" \
+    --private-key-outfile "$CERTIFICATE_PATH/claim.pkey.pem" \
+    --set-as-active \
+    --query certificateArn --output text)
+
+curl -o "$CERTIFICATE_PATH/claim.root.pem" https://www.amazontrust.com/repository/AmazonRootCA1.pem
+```
+
 #### install npm packages:
 
 ```bash
@@ -31,15 +48,6 @@ npm update
 npm run build
 ```
 
-#### deploy cloud resources for GGFleetProvisoning:
-```bash
-aws cloudformation create-stack --stack-name GGFleetProvisoning --template-body file://fleet_provisioining_infra/gg-bootstrap.yaml --capabilities CAPABILITY_NAMED_IAM
-```
-Wait few minutes for resources being created. You can check status from CloudFormation console or with command:
-```bash
-aws cloudformation describe-stacks --stack-name GGFleetProvisoning
-```
-
 #### deploy cloud resources for all demo pipelines:
 
 > [!NOTE]
@@ -50,7 +58,9 @@ aws cloudformation describe-stacks --stack-name GGFleetProvisoning
 # only required once
 cdk bootstrap
 
-cdk deploy --all --require-approval never
+cdk deploy --all --require-approval never \
+    --parameters PokyStack:GGCertificateArnParam=$CERTIFICATE_ARN \
+    -c certificateFilePath=$CERTIFICATE_PATH
 ```
 
 The newly created pipeline `ubuntu_22_04BuildImagePipeline` from the CodePipeline console will start automatically.
@@ -58,54 +68,14 @@ The newly created pipeline `ubuntu_22_04BuildImagePipeline` from the CodePipelin
 After that completes, the EmbeddedLinux pipeline in the CodePipeline console page is ready to run.
 But first create the claim certificates that should be bultin to the device.
 
-#### seed repo with claim certificates:
-
-##### Create claim certificate
-
-```bash
-mkdir claim-certs
-
-export CERTIFICATE_ARN=$(aws iot create-keys-and-certificate \
-    --certificate-pem-outfile "claim-certs/claim.cert.pem" \
-    --public-key-outfile "claim-certs/claim.pubkey.pem" \
-    --private-key-outfile "claim-certs/claim.pkey.pem" \
-    --set-as-active \
-    --query certificateArn)
-
-curl -o "claim-certs/claim.root.pem" https://www.amazontrust.com/repository/AmazonRootCA1.pem
-```
-
-##### Attach the AWS IoT policy to the provisioning claim certificate
-
-As we created IoT policy named GGProvisioningClaimPolicy with CloudFormation we can just use the name to attach the policy:
-
-```bash
-aws iot attach-policy --policy-name GGProvisioningClaimPolicy --target ${CERTIFICATE_ARN//\"}
-```
-
-##### Create a Thing Group
-
-Once our devices get provisioned they will become part of this Thing Group allowing us later to target Thing Group Fleet Deployments.
-
-```bash
-aws iot create-thing-group --thing-group-name EmbeddedLinuxFleet
-```
-
-##### put claim certificates in SecretsManager repo:
-```bash
-aws secretsmanager create-secret --name EC2AMIBigaPipeline_claim.cert.pem --secret-binary fileb://claim-certs/claim.cert.pem
-aws secretsmanager create-secret --name EC2AMIBigaPipeline_claim.pkey.pem --secret-binary fileb://claim-certs/claim.pkey.pem
-aws secretsmanager create-secret --name EC2AMIBigaPipeline_claim.root.pem --secret-binary fileb://claim-certs/claim.root.pem
-
-aws secretsmanager create-secret --name NxpGoldboxBigaPipeline_claim.cert.pem --secret-binary fileb://claim-certs/claim.cert.pem
-aws secretsmanager create-secret --name NxpGoldboxBigaPipeline_claim.pkey.pem --secret-binary fileb://claim-certs/claim.pkey.pem
-aws secretsmanager create-secret --name NxpGoldboxBigaPipeline_claim.root.pem --secret-binary fileb://claim-certs/claim.root.pem
-```
-
 #### seed repo with site.conf:
 The other necessary params are part of the aws-biga-image.bb recipe
+
 ##### create site.conf:
+
 ```bash
+echo -e "" > repo_seed/site.conf
+
 echo -e GGV2_REGION=\"$(aws configure get region)\" >> repo_seed/site.conf
 
 echo -e GGV2_DATA_EP=\"$(aws --output text iot describe-endpoint \
@@ -173,7 +143,7 @@ aws codecommit put-file \
     --file-content file://repo_seed/ami/build.buildspec.yml \
     --file-path /build.buildspec.yml \
     --parent-commit-id $(aws codecommit get-branch --repository-name ec2-ami-biga-layer-repo --branch-name main --query 'branch.commitId' --output text) \
-    --commit-message "commit repo_seed" \
+    --commit-message "commit buildspec" \
     --cli-binary-format raw-in-base64-out
 
 
@@ -183,7 +153,7 @@ aws codecommit put-file \
     --file-content file://repo_seed/device/build.buildspec.yml \
     --file-path /build.buildspec.yml \
     --parent-commit-id $(aws codecommit get-branch --repository-name nxp-goldbox-biga-layer-repo --branch-name main --query 'branch.commitId' --output text) \
-    --commit-message "commit repo_seed" \
+    --commit-message "commit buildspec" \
     --cli-binary-format raw-in-base64-out
 ```
 
@@ -292,13 +262,16 @@ ssh -i biga.pem user@<public IP>
 
 Now we can start deploying the Greengrass components to the target.
 
+# Cleanup
 
-#### destroy cloud resources for all demo pipelines:
+### Destroy cloud resources for all demo pipelines:
 ```bash
-cdk destroy --all
+cdk destroy --all --force
 ```
 
-## Useful commands
+# Appendix
+
+## Useful CDK commands
 
 -   `npm run build` compile typescript to js
 -   `npm run watch` watch for changes and compile
