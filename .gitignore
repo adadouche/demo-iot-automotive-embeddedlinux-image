@@ -16,4 +16,4 @@ cdk/repo_seed/site.conf
 /.repo/
 /bsp
 /external
-/meta-
+meta-agl*
