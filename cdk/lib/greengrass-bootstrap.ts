@@ -275,9 +275,8 @@ export class GreenGrassBootstrapStack extends Stack {
     }
 
     constructor(scope: Construct, id: string, props: GreenGrassBootstrapStackProps) {
-        super(scope, id);
+        super(scope, id, props);
         this.props = props;
-
         this.getProvisioningClaimPolicy();
         this.getTokenExchangeRole();
         this.getFleetProvisioningRole();

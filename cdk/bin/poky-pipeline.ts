@@ -45,7 +45,7 @@ export interface PokyStackProps extends StackProps {
 
 export class PokyStack extends Stack {
   constructor(scope: Construct, id: string, props: PokyStackProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     const ggCertificateArnParam = new CfnParameter(this, `GGCertificateArnParam`, {
       noEcho: true,
@@ -95,6 +95,7 @@ export class PokyStack extends Stack {
  */
 const vpc = new PipelineNetworkStack(app, {
   ...defaultProps,
+  description: "AWS IoT Automotive Demo - VPC Network Stack",
 });
 
 /**
@@ -102,6 +103,7 @@ const vpc = new PipelineNetworkStack(app, {
  */
 const buildImageRepo = new BuildImageRepoStack(app, "BuildImageRepo", {
   ...defaultProps,
+  description: "AWS IoT Automotive Demo - Build Image Repo Stack",
 });
 
 
@@ -109,14 +111,16 @@ const buildImageRepo = new BuildImageRepoStack(app, "BuildImageRepo", {
  * Set up the Stacks that Bootstrap Greengrass for the fleet provisioning.
  */
 const greenGrassBootstrapStack = new GreenGrassBootstrapStack(app, 'GGFleetProvisoning', {
-  env: env
+  env: env,
+  description: "AWS IoT Automotive Demo - AWS GreenGrass Bootstrap Stack",
 });
 
 /**
  * Set up the Poky Stack that create the SSM Parameters, Thing Group and associate the certificate with it
  */
 const pokyStack = new PokyStack(app, 'PokyStack', {
-  GGProvisioningClaimPolicy: greenGrassBootstrapStack.getProvisioningClaimPolicy()
+  GGProvisioningClaimPolicy: greenGrassBootstrapStack.getProvisioningClaimPolicy(),
+  description: "AWS IoT Automotive Demo - Poky Base Stack",
 })
 pokyStack.addDependency(greenGrassBootstrapStack);
 
@@ -125,6 +129,7 @@ pokyStack.addDependency(greenGrassBootstrapStack);
  */
 const buildImageData = new BuildImageDataStack(app, "BuildImageData", {
   ...defaultProps,
+  description: "AWS IoT Automotive Demo - Ubuntu Build Image Stack",
   bucketName: `build-image-data-${env.account}-${env.region}`,
 });
 buildImageData.addDependency(greenGrassBootstrapStack);
@@ -132,6 +137,7 @@ buildImageData.addDependency(greenGrassBootstrapStack);
 
 const buildImagePipelineStack = new BuildImagePipelineStack(app, "BuildImagePipeline", {
   ...defaultProps,
+  description: "AWS IoT Automotive Demo - Build Image Pipeline Stack",
   dataBucket: buildImageData.bucket,
   repository: buildImageRepo.repository,
   imageKind: ImageKind.Ubuntu22_04,
@@ -143,6 +149,7 @@ buildImagePipelineStack.addDependency(greenGrassBootstrapStack);
  */
 const ec2AMIBigaPipeline = new EmbeddedLinuxPipelineStack(app, "EC2AMIBigaPipeline", {
   ...defaultProps,
+  description: "AWS IoT Automotive Demo - Biga EC2 AMI Image Pipeline Stack",
   imageRepo: buildImageRepo.repository,
   imageTag: ImageKind.Ubuntu22_04,
   vpc: vpc.vpc,
@@ -164,6 +171,7 @@ ec2AMIBigaPipeline.addDependency(pokyStack);
  */
 const nxpGoldboxBigaPipeline = new EmbeddedLinuxPipelineStack(app, "NxpGoldboxBigaPipeline", {
   ...defaultProps,
+  description: "AWS IoT Automotive Demo - Biga NXP GoleBox Image Pipeline Stack",
   imageRepo: buildImageRepo.repository,
   imageTag: ImageKind.Ubuntu22_04,
   vpc: vpc.vpc,
