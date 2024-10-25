@@ -38,6 +38,7 @@ npm install .
 ```
 
 #### updating - if you have an already have packages installed before
+
 ```bash
 npm update
 ```
@@ -157,13 +158,28 @@ aws codecommit put-file \
     --cli-binary-format raw-in-base64-out
 ```
 
-# Flashing the Device
+# NXP Goldbox 
 
-## NXP Goldbox
+## Creating a flash the Device
 
-In case of flashing the NXP GoldBox, once the pipeline is completed, we can simply go to the Artifacts S3 bucket and download the `sdcard` image. Once the download is complete, insert the SDCard into the computer and unmount any partitions in case they have been automounted.
+In case of flashing the NXP GoldBox, once the **NxpGoldboxBigaPipeline** pipeline is completed, we can simply go to the Artifacts S3 bucket and download the `sdcard` image. 
 
-To identify the device name of the SD card you can do:
+Alternatively, you can run the following commands:
+
+```sh
+ami_s3_bucket_arn=$(aws cloudformation describe-stacks --stack-name NxpGoldboxBigaPipeline --output text --query "Stacks[0].Outputs[?OutputKey=='BuildOutput'].OutputValue")
+ami_s3_bucket_name=${ami_s3_bucket_arn##*:}
+
+aws s3 cp s3://${ami_s3_bucket_name}/aws-biga-image-s32g274ardb2.sdcard .
+```
+
+Once the download is complete, insert the SDCard into the computer.
+
+If you are a Windows user, you can use [Rufus]() to create you SD Card.
+
+If you are a Linux/Mac user, proceed with the next steps.
+
+To identify the device name of the SD card you can execute:
 
 ```
 # Linux
@@ -181,22 +197,28 @@ sudo umount /dev/sdX1
 diskutil unmount /dev/diskXs1
 ```
 
-Make sure to replace the `X` with the right block device.
+Make sure to replace the `X` with the right block device or drive letter.
 
 Now we can flash the device:
+
 > Please note that it is important to specify the right block device here, otherwise this can erase all of your data, so be careful.
 
-```
+```sh
+# Linux & Mac
 sudo dd if=./aws-biga-image-s32g274ardb2.sdcard of=/dev/diskX bs=1m && sync
 ```
 
+## Connect to the NXP Goldbox
+
 Once completed, insert back the SD card into the GoldBox and reboot or power cycle the device. This will boot the device and we should be able to `ssh` into it if the host is in the same network:
 
-```
+
+```sh
 ssh root@s32g274ardb2.local
 ```
 
-After the successful build, we can go ahead and bootstrap a device.
+# Troubleshooting 
+
 ## EC2 Graviton AMI // debugging
  Those steps are just necessary for debugging, or manually starting an EC2.
 
