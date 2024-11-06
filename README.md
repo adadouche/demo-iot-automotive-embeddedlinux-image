@@ -24,7 +24,6 @@ export AWS_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --outpu
 export AWS_DEFAULT_REGION=eu-central-1
 ```
 
-
 ##### Create claim certificate
 
 ```bash
@@ -103,7 +102,7 @@ echo -e GGV2_CRED_EP=\"$(aws --output text iot describe-endpoint \
     --endpoint-type iot:CredentialProvider \
     --query 'endpointAddress')\" >> repo_seed/site.conf
 
-echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks --stack-name GGFleetProvisoning \
+echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks --stack-name biga-greengrass-fleet-provisoning \
  --query 'Stacks[0].Outputs[?OutputKey==`GGTokenExchangeRoleAlias`].OutputValue' --output text)\" >> repo_seed/site.conf
 ```
 
@@ -237,16 +236,17 @@ ssh root@s32g274ardb2.local
 # Troubleshooting 
 
 ## EC2 Graviton AMI // debugging
+
  Those steps are just necessary for debugging, or manually starting an EC2.
 
  In a scenario where we use an EC2 instance, we should be able to find the latest AMI that was created by the pipeline by doing:
 
 
 ```
-export AWS_REGION=$(aws configure get region)
+export AWS_DEFAULT_REGION=$(aws configure get region)
 
 aws ec2 describe-images \
-    --region $AWS_REGION \
+    --region $AWS_DEFAULT_REGION \
     --owners self \
     --query 'Images | sort_by(@, &CreationDate) | [-1]' \
     --output json
