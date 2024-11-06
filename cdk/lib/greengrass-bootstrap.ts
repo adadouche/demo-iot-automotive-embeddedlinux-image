@@ -2,9 +2,9 @@
 import { Construct } from 'constructs';
 import {
     CfnOutput,
-    Fn,
     Stack,
-    StackProps
+    StackProps,
+    Aws,
 } from 'aws-cdk-lib';
 import {
     Effect,
@@ -19,17 +19,7 @@ import {
     CfnProvisioningTemplate,
 } from 'aws-cdk-lib/aws-iot';
 
-export interface GreenGrassBootstrapStackProps extends StackProps {
-    // List all the properties,
-    env: {
-        account: string | undefined,
-        region: string | undefined,
-    },
-}
-
 export class GreenGrassBootstrapStack extends Stack {
-    private props: GreenGrassBootstrapStackProps;
-
     private ggProvisioningClaimPolicy: CfnPolicy;
     private ggTokenExchangeRole: Role;
     private ggFleetProvisioningRole: Role;
@@ -37,13 +27,34 @@ export class GreenGrassBootstrapStack extends Stack {
     private ggDeviceDefaultPolicy: CfnPolicy;
     private ggFleetProvisionTemplate: CfnProvisioningTemplate;
 
+    constructor(scope: Construct, id: string, props: StackProps) {
+        super(scope, id, props);
+        this.getProvisioningClaimPolicy();
+        this.getTokenExchangeRole();
+        this.getFleetProvisioningRole();
+        this.getTokenExchangeRoleAlias();
+        this.getDeviceDefaultPolicy()
+        this.getFleetProvisionTemplate();
+
+        new CfnOutput(this, 'GGTokenExchangeRoleAlias', {
+            exportName: 'GGTokenExchangeRoleAlias',
+            description: 'Name of token exchange role alias.',
+            value: `${this.getTokenExchangeRoleAlias().roleAlias}`,
+        });
+
+        new CfnOutput(this, 'GGClaimPolicy', {
+            exportName: 'GGClaimPolicy',
+            description: 'Name of claim policy.',
+            value: `${this.getProvisioningClaimPolicy().policyName}`,
+        });
+    }
     public getProvisioningClaimPolicy() {
         if (this.ggProvisioningClaimPolicy === undefined) {
             // const _uuid = this.stackId.replace('-', '').substring(this.stackId.length-8);
             // Fn.split('-', Fn.split('/', this.stackId)[2])[4];
             // arn:aws:cloudformation:us-east-1:218239986631:stack/GGFleetProvisoning/39df4fc0-8867-11ef-8771-0e3c18f7ab13
             this.ggProvisioningClaimPolicy = new CfnPolicy(this, 'GGProvisioningClaimPolicy', {
-                policyName: `${this.stackName}_GGProvisioningClaimPolicy`,
+                policyName: `GGProvisioningClaimPolicy`,
                 policyDocument: new PolicyDocument({
                     statements: [
                         new PolicyStatement({
@@ -60,8 +71,8 @@ export class GreenGrassBootstrapStack extends Stack {
                                 'iot:Receive',
                             ],
                             resources: [
-                                `arn:aws:iot:${this.props.env.region}:${this.props.env.account}:topic/$aws/certificates/create/*`,
-                                `arn:aws:iot:${this.props.env.region}:${this.props.env.account}:topic/$aws/provisioning-templates/${this.getFleetProvisionTemplate().templateName}/provision/*`
+                                `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topic/$aws/certificates/create/*`,
+                                `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topic/$aws/provisioning-templates/${this.getFleetProvisionTemplate().templateName}/provision/*`
                             ],
                         }),
                         new PolicyStatement({
@@ -70,8 +81,8 @@ export class GreenGrassBootstrapStack extends Stack {
                                 'iot:Subscribe',
                             ],
                             resources: [
-                                `arn:aws:iot:${this.props.env.region}:${this.props.env.account}:topicfilter/$aws/certificates/create/*`,
-                                `arn:aws:iot:${this.props.env.region}:${this.props.env.account}:topicfilter/$aws/provisioning-templates/${this.getFleetProvisionTemplate().templateName}/provision/*`,
+                                `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topicfilter/$aws/certificates/create/*`,
+                                `arn:aws:iot:${Aws.REGION}:${Aws.ACCOUNT_ID}:topicfilter/$aws/provisioning-templates/${this.getFleetProvisionTemplate().templateName}/provision/*`,
                             ],
                         })],
                 })
@@ -172,7 +183,7 @@ export class GreenGrassBootstrapStack extends Stack {
     public getTokenExchangeRoleAlias() {
         if (this.ggTokenExchangeRoleAlias === undefined) {
             this.ggTokenExchangeRoleAlias = new CfnRoleAlias(this, 'GGRoleAlias', {
-                roleAlias: `${this.stackName}_GGRoleAlias`,
+                roleAlias: `GGRoleAlias`,
                 roleArn: this.getTokenExchangeRole().roleArn,
             });
         }
@@ -182,7 +193,7 @@ export class GreenGrassBootstrapStack extends Stack {
     public getDeviceDefaultPolicy() {
         if (this.ggDeviceDefaultPolicy === undefined) {
             this.ggDeviceDefaultPolicy = new CfnPolicy(this, 'GGPolicy', {
-                policyName: `${this.stackName}_DeviceDefaultPolicy`,
+                policyName: `GGDeviceDefaultPolicy`,
                 policyDocument: new PolicyDocument({
                     statements: [
                         new PolicyStatement({
@@ -213,7 +224,7 @@ export class GreenGrassBootstrapStack extends Stack {
     public getFleetProvisionTemplate() {
         if (this.ggFleetProvisionTemplate === undefined) {
             this.ggFleetProvisionTemplate = new CfnProvisioningTemplate(this, 'GGProvisioningTemplate', {
-                templateName : `${this.stackName}_ProvisionTemplate`,
+                templateName: `GGProvisionTemplate`,
                 description: 'Fleet Provisioning template for AWS IoT Greengrass.',
                 enabled: true,
                 provisioningRoleArn: this.getFleetProvisioningRole().roleArn,
@@ -274,26 +285,4 @@ export class GreenGrassBootstrapStack extends Stack {
         return this.ggFleetProvisionTemplate;
     }
 
-    constructor(scope: Construct, id: string, props: GreenGrassBootstrapStackProps) {
-        super(scope, id, props);
-        this.props = props;
-        this.getProvisioningClaimPolicy();
-        this.getTokenExchangeRole();
-        this.getFleetProvisioningRole();
-        this.getTokenExchangeRoleAlias();
-        this.getDeviceDefaultPolicy()
-        this.getFleetProvisionTemplate();
-
-        new CfnOutput(this, 'GGTokenExchangeRoleAlias', {
-            exportName: 'GGTokenExchangeRoleAlias',
-            description: 'Name of token exchange role alias.',
-            value: `${this.getTokenExchangeRoleAlias().roleAlias}`,
-        });
-
-        new CfnOutput(this, 'GGClaimPolicy', {
-            exportName: 'GGClaimPolicy',
-            description: 'Name of claim policy.',
-            value: `${this.getProvisioningClaimPolicy().policyName}`,
-        });
-    }
 }

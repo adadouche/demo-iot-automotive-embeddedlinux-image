@@ -15,6 +15,16 @@ cd cdk
 ```
 ### Setting Up
 
+##### Setting environment variables
+
+```bash
+export AWS_PROFILE="riv24"
+export AWS_DEFAULT_REGION=$(aws configure get region --profile ${AWS_PROFILE})
+export AWS_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile ${AWS_PROFILE})
+export AWS_DEFAULT_REGION=eu-central-1
+```
+
+
 ##### Create claim certificate
 
 ```bash
@@ -29,6 +39,11 @@ export CERTIFICATE_ARN=$(aws iot create-keys-and-certificate \
     --query certificateArn --output text)
 
 curl -o "$CERTIFICATE_PATH/claim.root.pem" https://www.amazontrust.com/repository/AmazonRootCA1.pem
+
+mkdir -p $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION
+
+echo $CERTIFICATE_ARN > $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/certificate_arn.txt
+cp -arf $CERTIFICATE_PATH/*.pem $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/
 ```
 
 #### install npm packages:
@@ -56,11 +71,11 @@ npm run build
 > using [NVM](https://github.com/nvm-sh/nvm) to install a compatible version
 
 ```bash
-# only required once
+# only required once unless you upgrade your cdk version
 cdk bootstrap
 
 cdk deploy --all --require-approval never \
-    --parameters PokyStack:GGCertificateArnParam=$CERTIFICATE_ARN \
+    --parameters biga-poky:GGCertificateArnParam=$CERTIFICATE_ARN \
     -c certificateFilePath=$CERTIFICATE_PATH
 ```
 
@@ -70,6 +85,7 @@ After that completes, the EmbeddedLinux pipeline in the CodePipeline console pag
 But first create the claim certificates that should be bultin to the device.
 
 #### seed repo with site.conf:
+
 The other necessary params are part of the aws-biga-image.bb recipe
 
 ##### create site.conf:
@@ -162,13 +178,14 @@ aws codecommit put-file \
 
 ## Creating a flash the Device
 
-In case of flashing the NXP GoldBox, once the **NxpGoldboxBigaPipeline** pipeline is completed, we can simply go to the Artifacts S3 bucket and download the `sdcard` image. 
+In case of flashing the NXP GoldBox, once the **Biga-build-nxp-goldbox** pipeline is completed, we can simply go to the Artifacts S3 bucket and download the `sdcard` image. 
 
 Alternatively, you can run the following commands:
 
 ```sh
-ami_s3_bucket_arn=$(aws cloudformation describe-stacks --stack-name NxpGoldboxBigaPipeline --output text --query "Stacks[0].Outputs[?OutputKey=='BuildOutput'].OutputValue")
+ami_s3_bucket_arn=$(aws cloudformation describe-stacks --stack-name biga-build-nxp-goldbox --output text --query "Stacks[0].Outputs[?OutputKey=='BuildOutput'].OutputValue")
 ami_s3_bucket_name=${ami_s3_bucket_arn##*:}
+echo $ami_s3_bucket_name
 
 aws s3 cp s3://${ami_s3_bucket_name}/aws-biga-image-s32g274ardb2.sdcard .
 ```
@@ -286,7 +303,8 @@ Now we can start deploying the Greengrass components to the target.
 
 # Cleanup
 
-### Destroy cloud resources for all demo pipelines:
+### Destroy cloud resources:
+
 ```bash
 cdk destroy --all --force
 ```
