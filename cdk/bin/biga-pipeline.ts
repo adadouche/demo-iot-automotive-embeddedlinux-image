@@ -11,11 +11,11 @@ import {
   ProjectKind,
 } from "aws4embeddedlinux-cdk-lib";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
-import { PokyStack } from "../lib/poky";
+import { BigaBaseStack } from "../lib/biga-base";
 
 declare const tags: any;
 
-const app = new cdk.App();  
+const app = new cdk.App();
 
 /* See https://docs.aws.amazon.com/sdkref/latest/guide/access.html for details on how to access AWS. */
 const env = {
@@ -31,6 +31,15 @@ const defaultProps: cdk.StackProps = {
   tags: { PURPOSE: "META-AWS-BUILD" },
   // env:env,
 };
+
+/**
+ * Set up the Certificate Stack that create the SSM Parameters, Thing Group and associate the certificate with it
+ */
+const bigaBaseStack = new BigaBaseStack(app, 'biga-base', {
+  ...defaultProps,
+  description: "AWS IoT Automotive Demo - Biga Base Stack",
+})
+
 
 /**
  * Set up networking to allow us to securely attach EFS to our CodeBuild instances.
@@ -56,16 +65,8 @@ const greenGrassBootstrapStack = new GreenGrassBootstrapStack(app, 'biga-greengr
   ...defaultProps,
   description: "AWS IoT Automotive Demo - AWS IoT GreenGrass Bootstrap Stack",
 });
+greenGrassBootstrapStack.addDependency(bigaBaseStack);
 
-/**
- * Set up the Poky Stack that create the SSM Parameters, Thing Group and associate the certificate with it
- */
-const pokyStack = new PokyStack(app, 'biga-poky', {
-  ...defaultProps,
-  GGProvisioningClaimPolicy: greenGrassBootstrapStack.getProvisioningClaimPolicy(),
-  description: "AWS IoT Automotive Demo - Poky Base Stack",
-})
-pokyStack.addDependency(greenGrassBootstrapStack);
 
 /**
  * Set up the Stacks that create our Build Host.
@@ -107,7 +108,7 @@ const ec2AMIBigaPipeline = new EmbeddedLinuxPipelineStack(app, "biga-build-ec2-a
   layerRepoName: "ec2-ami-biga-layer-repo",
   projectKind: ProjectKind.PokyAmi,
 });
-ec2AMIBigaPipeline.addDependency(pokyStack);
+ec2AMIBigaPipeline.addDependency(bigaBaseStack);
 
 /**
  * Create a biga pipeline for agl-nxp-goldbox.
@@ -129,4 +130,4 @@ const nxpGoldboxBigaPipeline = new EmbeddedLinuxPipelineStack(app, "biga-build-n
   layerRepoName: "nxp-goldbox-biga-layer-repo",
   projectKind: ProjectKind.MetaAwsDemo,
 });
-nxpGoldboxBigaPipeline.addDependency(pokyStack);
+nxpGoldboxBigaPipeline.addDependency(bigaBaseStack);

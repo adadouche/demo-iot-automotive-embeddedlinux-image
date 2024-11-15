@@ -18,10 +18,9 @@ cd cdk
 ##### Setting environment variables
 
 ```bash
-export AWS_PROFILE="riv24"
+export AWS_PROFILE="default"
 export AWS_DEFAULT_REGION=$(aws configure get region --profile ${AWS_PROFILE})
 export AWS_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile ${AWS_PROFILE})
-export AWS_DEFAULT_REGION=eu-central-1
 ```
 
 ##### Create claim certificate
@@ -74,7 +73,7 @@ npm run build
 cdk bootstrap
 
 cdk deploy --all --require-approval never \
-    --parameters biga-poky:GGCertificateArnParam=$CERTIFICATE_ARN \
+    --parameters biga-greengrass-fleet-provisoning:GGCertificateArnParam=$CERTIFICATE_ARN \
     -c certificateFilePath=$CERTIFICATE_PATH
 ```
 
@@ -92,17 +91,12 @@ The other necessary params are part of the aws-biga-image.bb recipe
 ```bash
 echo -e "" > repo_seed/site.conf
 
-echo -e GGV2_REGION=\"$(aws configure get region)\" >> repo_seed/site.conf
+echo -e GGV2_REGION=\"$(aws configure get region --profile ${AWS_PROFILE})\" >> repo_seed/site.conf
 
-echo -e GGV2_DATA_EP=\"$(aws --output text iot describe-endpoint \
-    --endpoint-type iot:Data-ATS \
-    --query 'endpointAddress')\" >> repo_seed/site.conf
+echo -e GGV2_DATA_EP=\"$(aws --output text iot describe-endpoint --profile ${AWS_PROFILE} --endpoint-type iot:Data-ATS           --query 'endpointAddress')\" >> repo_seed/site.conf
+echo -e GGV2_CRED_EP=\"$(aws --output text iot describe-endpoint --profile ${AWS_PROFILE} --endpoint-type iot:CredentialProvider --query 'endpointAddress')\" >> repo_seed/site.conf
 
-echo -e GGV2_CRED_EP=\"$(aws --output text iot describe-endpoint \
-    --endpoint-type iot:CredentialProvider \
-    --query 'endpointAddress')\" >> repo_seed/site.conf
-
-echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks --stack-name biga-greengrass-fleet-provisoning \
+echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks --profile ${AWS_PROFILE} --stack-name biga-greengrass-fleet-provisoning \
  --query 'Stacks[0].Outputs[?OutputKey==`GGTokenExchangeRoleAlias`].OutputValue' --output text)\" >> repo_seed/site.conf
 ```
 
@@ -182,7 +176,7 @@ In case of flashing the NXP GoldBox, once the **Biga-build-nxp-goldbox** pipelin
 Alternatively, you can run the following commands:
 
 ```sh
-ami_s3_bucket_arn=$(aws cloudformation describe-stacks --stack-name biga-build-nxp-goldbox --output text --query "Stacks[0].Outputs[?OutputKey=='BuildOutput'].OutputValue")
+ami_s3_bucket_arn=$(aws cloudformation describe-stacks --profile ${AWS_PROFILE} --stack-name biga-build-nxp-goldbox --output text --query "Stacks[0].Outputs[?OutputKey=='BuildOutput'].OutputValue")
 ami_s3_bucket_name=${ami_s3_bucket_arn##*:}
 echo $ami_s3_bucket_name
 
