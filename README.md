@@ -1,31 +1,38 @@
 ## demo-iot-automotive-embeddedlinux-image
 
-This repo is to create a embedded-linux image, which is part of https://github.com/aws4embeddedlinux/demo-iot-automotive-cloud
+This repository wiil create the embedded-linux image, which is used by the [AWS IoT Automotive Cloud](https://github.com/aws4embeddedlinux/demo-iot-automotive-cloud) demo.
 
 # Meta-AWS CDK Library
 
 An AWS [Cloud Developer Toolkit](https://docs.aws.amazon.com/cdk/v2/guide/home.html) Library for building Yocto projects in AWS.
 
-## Quickstart
-to create yocto demo build pipelines and cloud resources.
+### Prerequisites 
 
-change into cdk dir - all following steps from the README are performed there.
-```bash
-cd cdk
-```
-### Setting Up
+This is the list of pre requisites for completing the installation and deployment:
 
-##### Setting environment variables
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
+- [Node.js and NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- OS Packages 
+  - Zip & Unzip
+
+### Setting environment variables
 
 ```bash
 export AWS_PROFILE="default"
-export AWS_DEFAULT_REGION=$(aws configure get region --profile ${AWS_PROFILE})
 export AWS_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile ${AWS_PROFILE})
+export AWS_DEFAULT_REGION=$(aws configure get region --profile ${AWS_PROFILE})
+
+echo "PROFILE : $AWS_PROFILE"
+echo "ACCOUNT : $AWS_DEFAULT_ACCOUNT"
+echo "REGION  : $AWS_DEFAULT_REGION"
 ```
 
 ##### Create claim certificate
 
 ```bash
+cd cdk
+
 export CERTIFICATE_PATH=claim-certs
 mkdir -p $CERTIFICATE_PATH
 
@@ -42,27 +49,36 @@ mkdir -p $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION
 
 echo $CERTIFICATE_ARN > $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/certificate_arn.txt
 cp -arf $CERTIFICATE_PATH/*.pem $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/
+
+# export CERTIFICATE_ARN=$(more $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/certificate_arn.txt)
+
+echo "CERTIFICATE_ARN  : $CERTIFICATE_ARN"
 ```
 
-#### install npm packages:
+#### Go to the CDK directory
+
+```bash
+cd cdk
+```
+#### Install npm packages
 
 ```bash
 npm install .
 ```
 
-#### updating - if you have an already have packages installed before
+#### Updating npm packages (if you have an already have packages installed before)
 
 ```bash
 npm update
 ```
 
-#### build:
+#### Build the CDK stack
 
 ```bash
 npm run build
 ```
 
-#### deploy cloud resources for all demo pipelines:
+#### Deploy the CDK resources
 
 > [!NOTE]
 > The used [library](https://github.com/aws4embeddedlinux/aws4embeddedlinux-ci) is tested against Node Versions 16, 18, and 20. If these versions are not available for your system, we recommend
@@ -82,7 +98,7 @@ The newly created pipeline `ubuntu_22_04BuildImagePipeline` from the CodePipelin
 After that completes, the EmbeddedLinux pipeline in the CodePipeline console page is ready to run.
 But first create the claim certificates that should be bultin to the device.
 
-#### seed repo with site.conf:
+#### Seed the CodeCommit repository
 
 The other necessary params are part of the aws-biga-image.bb recipe
 
@@ -96,8 +112,9 @@ echo -e GGV2_REGION=\"$(aws configure get region --profile ${AWS_PROFILE})\" >> 
 echo -e GGV2_DATA_EP=\"$(aws --output text iot describe-endpoint --profile ${AWS_PROFILE} --endpoint-type iot:Data-ATS           --query 'endpointAddress')\" >> repo_seed/site.conf
 echo -e GGV2_CRED_EP=\"$(aws --output text iot describe-endpoint --profile ${AWS_PROFILE} --endpoint-type iot:CredentialProvider --query 'endpointAddress')\" >> repo_seed/site.conf
 
-echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks --profile ${AWS_PROFILE} --stack-name biga-greengrass-fleet-provisoning \
- --query 'Stacks[0].Outputs[?OutputKey==`GGTokenExchangeRoleAlias`].OutputValue' --output text)\" >> repo_seed/site.conf
+echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks   --profile ${AWS_PROFILE} --stack-name biga-greengrass-fleet-provisoning --query 'Stacks[0].Outputs[?OutputKey==`GGTokenExchangeRoleAlias`].OutputValue' --output text)\" >> repo_seed/site.conf
+
+more repo_seed/site.conf
 ```
 
 ##### upload site.conf

@@ -2,7 +2,7 @@
   "name": "demo-iot-automotive-embeddedlinux-image-pipeline",
   "version": "0.1.0",
   "bin": {
-    "demos-pipeline": "bin/poky-pipeline.js"
+    "biga-pipeline": "bin/biga-pipeline.js"
   },
   "scripts": {
     "clean": "tsc --build --clean && rm -rf dist && rm -rf cdk.out",
@@ -19,7 +19,7 @@
     "@types/node": "20.1.0",
     "@typescript-eslint/eslint-plugin": "^5.59.6",
     "@typescript-eslint/parser": "^5.59.6",
-    "aws-cdk-lib": "^2.162.0",
+    "aws-cdk": "^2.170.0",
     "eslint": "^8.40.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -31,8 +31,9 @@
     "typescript": "~5.0.4"
   },
   "dependencies": {
-    "aws4embeddedlinux-cdk-lib": "file:../../aws4embeddedlinux-ci",
+    "aws-cdk-lib": "^2.170.0",
     "constructs": "^10.4.2",
+    "aws4embeddedlinux-cdk-lib": "file:../../aws4embeddedlinux-ci",
     "source-map-support": "^0.5.21"
   }
 }
