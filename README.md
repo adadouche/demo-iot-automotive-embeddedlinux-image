@@ -1,31 +1,34 @@
 ## demo-iot-automotive-embeddedlinux-image
 
-This repo is to create a embedded-linux image, which is part of https://github.com/aws4embeddedlinux/demo-iot-automotive-cloud
+This repository wiil create the embedded-linux image, which is used by the [AWS IoT Automotive Cloud](https://github.com/aws4embeddedlinux/demo-iot-automotive-cloud) demo.
 
-# Meta-AWS CDK Library
+### Prerequisites 
 
-An AWS [Cloud Developer Toolkit](https://docs.aws.amazon.com/cdk/v2/guide/home.html) Library for building Yocto projects in AWS.
+This is the list of pre requisites for completing the installation and deployment:
 
-## Quickstart
-to create yocto demo build pipelines and cloud resources.
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
+- [Node.js and NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- OS Packages 
+  - Zip & Unzip
 
-change into cdk dir - all following steps from the README are performed there.
-```bash
-cd cdk
-```
-### Setting Up
-
-##### Setting environment variables
+### Setting environment variables
 
 ```bash
 export AWS_PROFILE="default"
-export AWS_DEFAULT_REGION=$(aws configure get region --profile ${AWS_PROFILE})
 export AWS_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile ${AWS_PROFILE})
+export AWS_DEFAULT_REGION=$(aws configure get region --profile ${AWS_PROFILE})
+
+echo "PROFILE : $AWS_PROFILE"
+echo "ACCOUNT : $AWS_DEFAULT_ACCOUNT"
+echo "REGION  : $AWS_DEFAULT_REGION"
 ```
 
-##### Create claim certificate
+### Create claim certificates
 
 ```bash
+cd cdk
+
 export CERTIFICATE_PATH=claim-certs
 mkdir -p $CERTIFICATE_PATH
 
@@ -42,27 +45,37 @@ mkdir -p $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION
 
 echo $CERTIFICATE_ARN > $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/certificate_arn.txt
 cp -arf $CERTIFICATE_PATH/*.pem $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/
+
+# export CERTIFICATE_ARN=$(more $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/certificate_arn.txt)
+
+echo "CERTIFICATE_ARN  : $CERTIFICATE_ARN"
 ```
 
-#### install npm packages:
+### Go to the CDK directory
+
+```bash
+cd cdk
+```
+
+### Install npm packages
 
 ```bash
 npm install .
 ```
 
-#### updating - if you have an already have packages installed before
+### Updating npm packages (if you have an already have packages installed before)
 
 ```bash
 npm update
 ```
 
-#### build:
+### Build the CDK stack
 
 ```bash
 npm run build
 ```
 
-#### deploy cloud resources for all demo pipelines:
+### Deploy the CDK resources
 
 > [!NOTE]
 > The used [library](https://github.com/aws4embeddedlinux/aws4embeddedlinux-ci) is tested against Node Versions 16, 18, and 20. If these versions are not available for your system, we recommend
@@ -82,11 +95,11 @@ The newly created pipeline `ubuntu_22_04BuildImagePipeline` from the CodePipelin
 After that completes, the EmbeddedLinux pipeline in the CodePipeline console page is ready to run.
 But first create the claim certificates that should be bultin to the device.
 
-#### seed repo with site.conf:
+### Seed the CodeCommit repository
 
 The other necessary params are part of the aws-biga-image.bb recipe
 
-##### create site.conf:
+#### Create site.conf
 
 ```bash
 echo -e "" > repo_seed/site.conf
@@ -96,11 +109,12 @@ echo -e GGV2_REGION=\"$(aws configure get region --profile ${AWS_PROFILE})\" >> 
 echo -e GGV2_DATA_EP=\"$(aws --output text iot describe-endpoint --profile ${AWS_PROFILE} --endpoint-type iot:Data-ATS           --query 'endpointAddress')\" >> repo_seed/site.conf
 echo -e GGV2_CRED_EP=\"$(aws --output text iot describe-endpoint --profile ${AWS_PROFILE} --endpoint-type iot:CredentialProvider --query 'endpointAddress')\" >> repo_seed/site.conf
 
-echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks --profile ${AWS_PROFILE} --stack-name biga-greengrass-fleet-provisoning \
- --query 'Stacks[0].Outputs[?OutputKey==`GGTokenExchangeRoleAlias`].OutputValue' --output text)\" >> repo_seed/site.conf
+echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks   --profile ${AWS_PROFILE} --stack-name biga-greengrass-fleet-provisoning --query 'Stacks[0].Outputs[?OutputKey==`GGTokenExchangeRoleAlias`].OutputValue' --output text)\" >> repo_seed/site.conf
+
+more repo_seed/site.conf
 ```
 
-##### upload site.conf
+#### Upload site.conf
 
 ```bash
 aws codecommit put-file \
@@ -122,7 +136,7 @@ aws codecommit put-file \
     --cli-binary-format raw-in-base64-out
 ```
 
-##### upload manifest.xml
+#### Upload manifest.xml
 
 ```bash
 aws codecommit put-file \
@@ -145,7 +159,8 @@ aws codecommit put-file \
 ```
 
 
-#### seed repo with biga buildspec:
+#### Upload buildspec
+
 ```bash
 aws codecommit put-file \
     --repository-name ec2-ami-biga-layer-repo \
@@ -167,9 +182,9 @@ aws codecommit put-file \
     --cli-binary-format raw-in-base64-out
 ```
 
-# NXP Goldbox 
+## NXP Goldbox 
 
-## Creating a flash the Device
+### Creating a flash the Device
 
 In case of flashing the NXP GoldBox, once the **Biga-build-nxp-goldbox** pipeline is completed, we can simply go to the Artifacts S3 bucket and download the `sdcard` image. 
 
@@ -218,7 +233,7 @@ Now we can flash the device:
 sudo dd if=./aws-biga-image-s32g274ardb2.sdcard of=/dev/diskX bs=1m && sync
 ```
 
-## Connect to the NXP Goldbox
+### Connect to the NXP Goldbox
 
 Once completed, insert back the SD card into the GoldBox and reboot or power cycle the device. This will boot the device and we should be able to `ssh` into it if the host is in the same network:
 

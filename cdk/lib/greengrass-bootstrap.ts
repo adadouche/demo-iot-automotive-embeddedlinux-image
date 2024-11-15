@@ -201,7 +201,7 @@ export class GreenGrassBootstrapStack extends Stack {
     public getGreengrassFleetProvisioningTemplate() {
         if (this.ggFleetProvisionTemplate === undefined) {
             this.ggFleetProvisionTemplate = new CfnProvisioningTemplate(this, 'GGProvisioningTemplate', {
-                templateName: `GGProvisionTemplate`,
+                templateName: `GreengrassFleetProvisioningTemplate`,
                 description: 'Fleet Provisioning template for AWS IoT Greengrass.',
                 enabled: true,
                 provisioningRoleArn: this.getGreengrassFleetProvisioningRole().roleArn,
