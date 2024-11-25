@@ -95,12 +95,12 @@
   <project name="meta-ros" remote="meta-ros" path="external/meta-ros" upstream="kirkstone" revision="791990e9acd9db6aa4cd74af1039d92d9af26f06" />
 
   <!-- meta-aws -->
-  <remote fetch="https://github.com/aws4embeddedlinux/" name="aws"/>
-  <project name="meta-aws" remote="aws" path="external/meta-aws" upstream="kirkstone" revision="69ce4703994cdd95d14bc89fe1e3475c4f2be090" />
+  <remote fetch="https://github.com/aws4embeddedlinux/" name="aws4embeddedlinux"/>
+  <project name="meta-aws" remote="aws4embeddedlinux" path="external/meta-aws" upstream="kirkstone" revision="69ce4703994cdd95d14bc89fe1e3475c4f2be090" />
 
   <!-- meta-aws-iot-automotive-demo -->
-  <remote fetch="https://github.com/aws4embeddedlinux/" name="demo-iot-automotive-embeddedlinux-image"/>
-  <project name="demo-iot-automotive-embeddedlinux-image" remote="demo-iot-automotive-embeddedlinux-image" path="demo-iot-automotive-embeddedlinux-image" upstream="main"  revision="main" pushurl="https://github.com/aws4embeddedlinux/demo-iot-automotive-embeddedlinux-image.git" >
+  <remote fetch="https://github.com/adadouche/" name="adadouche"/>
+  <project name="demo-iot-automotive-embeddedlinux-image" remote="adadouche" path="demo-iot-automotive-embeddedlinux-image" upstream="main"  revision="main">
     <linkfile dest="meta-aws-iot-automotive-demo" src="meta-aws-iot-automotive-demo"/>
   </project>
 </manifest>

@@ -2,6 +2,12 @@
 
 This repository wiil create the embedded-linux image, which is used by the [AWS IoT Automotive Cloud](https://github.com/aws4embeddedlinux/demo-iot-automotive-cloud) demo.
 
+## TODO
+
+- Address the AWS CodeCommit deprecation 
+  - use connection ot a GitHub/GitLab?
+  - host a self-managed GitLab?
+
 ### Prerequisites 
 
 This is the list of pre requisites for completing the installation and deployment:
@@ -12,23 +18,49 @@ This is the list of pre requisites for completing the installation and deploymen
 - OS Packages 
   - Zip & Unzip
 
+### Go to the CDK directory
+
+```bash
+cd cdk
+```
+
+### Prepare the CDK environment
+
+```bash
+# Install npm pakcages
+npm install .
+
+# Updating npm packages if you have an already have packages installed from before
+# npm update
+
+# Build the CDK stack
+npm run build
+```
+
 ### Setting environment variables
 
 ```bash
 export AWS_PROFILE="default"
-export AWS_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile ${AWS_PROFILE})
 export AWS_DEFAULT_REGION=$(aws configure get region --profile ${AWS_PROFILE})
+export AWS_DEFAULT_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile ${AWS_PROFILE})
 
 echo "PROFILE : $AWS_PROFILE"
 echo "ACCOUNT : $AWS_DEFAULT_ACCOUNT"
 echo "REGION  : $AWS_DEFAULT_REGION"
 ```
 
-### Create claim certificates
+### Bootstrap CDK
+
+> [!NOTE]
+> Only required once unless you upgrade your cdk version
 
 ```bash
-cd cdk
+cdk bootstrap
+```
 
+### Create the Claim certificates
+
+```bash
 export CERTIFICATE_PATH=claim-certs
 mkdir -p $CERTIFICATE_PATH
 
@@ -46,45 +78,18 @@ mkdir -p $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION
 echo $CERTIFICATE_ARN > $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/certificate_arn.txt
 cp -arf $CERTIFICATE_PATH/*.pem $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/
 
-# export CERTIFICATE_ARN=$(more $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/certificate_arn.txt)
+export CERTIFICATE_ARN=$(more $CERTIFICATE_PATH/$AWS_DEFAULT_ACCOUNT-$AWS_DEFAULT_REGION/certificate_arn.txt)
 
 echo "CERTIFICATE_ARN  : $CERTIFICATE_ARN"
 ```
 
-### Go to the CDK directory
-
-```bash
-cd cdk
-```
-
-### Install npm packages
-
-```bash
-npm install .
-```
-
-### Updating npm packages (if you have an already have packages installed before)
-
-```bash
-npm update
-```
-
-### Build the CDK stack
-
-```bash
-npm run build
-```
-
-### Deploy the CDK resources
+### Deploy the CDK stack
 
 > [!NOTE]
 > The used [library](https://github.com/aws4embeddedlinux/aws4embeddedlinux-ci) is tested against Node Versions 16, 18, and 20. If these versions are not available for your system, we recommend
 > using [NVM](https://github.com/nvm-sh/nvm) to install a compatible version
 
 ```bash
-# only required once unless you upgrade your cdk version
-cdk bootstrap
-
 cdk deploy --all --require-approval never \
     --parameters biga-greengrass-fleet-provisoning:GGCertificateArnParam=$CERTIFICATE_ARN \
     -c certificateFilePath=$CERTIFICATE_PATH
@@ -92,8 +97,9 @@ cdk deploy --all --require-approval never \
 
 The newly created pipeline `ubuntu_22_04BuildImagePipeline` from the CodePipeline console will start automatically.
 
-After that completes, the EmbeddedLinux pipeline in the CodePipeline console page is ready to run.
-But first create the claim certificates that should be bultin to the device.
+After the pipeline completes, the **`EmbeddedLinux`** pipelines in the CodePipeline console page are ready to run.
+
+But first create the claim certificates that should be bult-in to the device.
 
 ### Seed the CodeCommit repository
 
@@ -114,7 +120,7 @@ echo -e GGV2_TES_RALIAS=\"$(aws cloudformation describe-stacks   --profile ${AWS
 more repo_seed/site.conf
 ```
 
-#### Upload site.conf
+#### Upload site conf / manifest / buildspec
 
 ```bash
 aws codecommit put-file \
@@ -134,11 +140,7 @@ aws codecommit put-file \
     --parent-commit-id $(aws codecommit get-branch --repository-name nxp-goldbox-biga-layer-repo --branch-name main --query 'branch.commitId' --output text) \
     --commit-message "commit site.conf" \
     --cli-binary-format raw-in-base64-out
-```
-
-#### Upload manifest.xml
-
-```bash
+    
 aws codecommit put-file \
     --repository-name ec2-ami-biga-layer-repo \
     --branch-name main \
@@ -156,12 +158,7 @@ aws codecommit put-file \
     --parent-commit-id $(aws codecommit get-branch --repository-name nxp-goldbox-biga-layer-repo --branch-name main --query 'branch.commitId' --output text) \
     --commit-message "commit manifest.xml" \
     --cli-binary-format raw-in-base64-out
-```
-
-
-#### Upload buildspec
-
-```bash
+    
 aws codecommit put-file \
     --repository-name ec2-ami-biga-layer-repo \
     --branch-name main \
@@ -170,7 +167,6 @@ aws codecommit put-file \
     --parent-commit-id $(aws codecommit get-branch --repository-name ec2-ami-biga-layer-repo --branch-name main --query 'branch.commitId' --output text) \
     --commit-message "commit buildspec" \
     --cli-binary-format raw-in-base64-out
-
 
 aws codecommit put-file \
     --repository-name nxp-goldbox-biga-layer-repo \
@@ -186,7 +182,7 @@ aws codecommit put-file \
 
 ### Creating a flash the Device
 
-In case of flashing the NXP GoldBox, once the **Biga-build-nxp-goldbox** pipeline is completed, we can simply go to the Artifacts S3 bucket and download the `sdcard` image. 
+In case of flashing the NXP GoldBox, once the **biga-build-nxp-goldbox-** pipeline is completed, you can simply go to the Artifacts S3 bucket and download the `sdcard` image. 
 
 Alternatively, you can run the following commands:
 

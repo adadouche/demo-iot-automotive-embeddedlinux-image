@@ -70,7 +70,7 @@ export class GreenGrassBootstrapStack extends Stack {
     public getGreengrassTokenExchangeRole() {
         if (this.ggTokenExchangeRole === undefined) {
             this.ggTokenExchangeRole = new Role(this, `GGCredentialsRole`, {
-                roleName: "GreengrassV2TokenExchangeRole",
+                roleName: `GreengrassV2TokenExchangeRole-${Aws.REGION}`,
                 assumedBy: new ServicePrincipal('credentials.iot.amazonaws.com'),
                 path: '/',
             });
