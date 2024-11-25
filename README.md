@@ -1,7 +1,7 @@
 ## demo-iot-automotive-embeddedlinux-image
 
 This repository wiil create the embedded-linux image, which is used by the [AWS IoT Automotive Cloud](https://github.com/aws4embeddedlinux/demo-iot-automotive-cloud) demo.
-
+ 
 ### Prerequisites 
 
 This is the list of pre requisites for completing the installation and deployment:
