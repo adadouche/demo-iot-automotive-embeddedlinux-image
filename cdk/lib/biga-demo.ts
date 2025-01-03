@@ -8,7 +8,7 @@ import {
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { CfnThingGroup } from 'aws-cdk-lib/aws-iot';
 
-export class BigaBaseStack extends Stack {
+export class BigaDemoStack extends Stack {
     constructor(scope: Construct, id: string, props: StackProps) {
         super(scope, id, props);
 
