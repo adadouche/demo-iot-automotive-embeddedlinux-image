@@ -12,9 +12,9 @@ phases:
     run-as: root
     commands:
       - chown -R yoctouser /sstate-cache
-      - chown -R yoctouser /downloads
+      - chown -R yoctouser /nfs/downloads
       - chmod 755 /sstate-cache
-      - chmod 755 /downloads
+      - chmod 755 /nfs/downloads
   build:
     commands:
       - repo init -u $CODEBUILD_SRC_DIR -b main -m manifest.xml
@@ -38,9 +38,9 @@ phases:
       # only delete empty dirs
       - find /sstate-cache -atime +30 -type d -empty -delete
       # Prune old files in our EFS Mounts, that are not accessed by this or any build within 30 days
-      - find /downloads -atime +30 -type f -delete
+      - find /nfs/downloads -atime +30 -type f -delete
       # only delete empty dirs
-      - find /downloads -atime +30 -type d -empty -delete
+      - find /nfs/downloads -atime +30 -type d -empty -delete
 
 artifacts:
   discard-paths: true
