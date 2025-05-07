@@ -96,7 +96,8 @@ After the base image pipeline completes, the other pipeline stacks are ready to 
 To deploy a specific pipeline type, you can use the following CDK deploy command:
 
 ```bash
-cdk deploy <pipeline-id> --require-approval
+cdk deploy <pipeline-id> \
+  --require-approval never
 ```
 
 where **\<pipeline-id\>** can be one or more of the following: 
