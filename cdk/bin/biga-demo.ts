@@ -83,9 +83,13 @@ const environmentVariables: {
   [key: string]: codebuild.BuildEnvironmentVariable;
 } = {
   'SOURCE_REPO_URL': {
-    value: `https://github.com/adadouche/demo-iot-automotive-embeddedlinux-image.git`,
+    value: `https://github.com/aws4embeddedlinux/demo-iot-automotive-embeddedlinux-image.git`,
     type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
   },
+  'SOURCE_REPO_BRANCH': {
+    value: `main`,
+    type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+  },  
   'CERTIFICATE_ID': {
     value: `${bigaIoTResourcesStack.certificateId}`,
     type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
