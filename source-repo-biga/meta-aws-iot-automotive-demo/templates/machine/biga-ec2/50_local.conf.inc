@@ -38,7 +38,7 @@ KERNEL_MODULE_AUTOLOAD =+ "can-raw"
 # this needs to be done in local.conf
 KERNEL_MODULE_AUTOLOAD += "vcan"
 
-IMAGE_INSTALL += "vcan-ec2-multicast-receiver"
+IMAGE_INSTALL += "vcan-ec2-receiver"
 
 # create vcan0 network interface
 IMAGE_INSTALL += "vcan0-netdev-config"
@@ -49,3 +49,6 @@ IMAGE_FEATURES += "empty-root-password"
 # becareful setting those values just in the image does not work, because they are not propagated correct to greengrass-bin recipe
 GGV2_THING_NAME  = "vCar"
 GGV2_THING_GROUP = "EmbeddedLinuxFleet"
+
+# Explicitly enable networkd and resolved.
+PACKAGECONFIG:append = " networkd resolved"

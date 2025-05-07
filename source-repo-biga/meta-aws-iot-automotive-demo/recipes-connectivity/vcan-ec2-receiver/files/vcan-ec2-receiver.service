@@ -1,0 +1,9 @@
+[Unit]
+Description=ec2 receiver for vcan0
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/vcan-ec2-receiver.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -138,6 +138,30 @@ cdk destroy --all --force
 
 ----- 
 
+## EC2 AMI - Enabling / Disabling / Configuring Multicast
+
+By default, Multicast is disabled. It can be configured using the the following file: `/usr/bin/vcan-ec2-receiver.env`
+
+Here is the default content: 
+
+```sh
+#!/bin/bash
+
+USE_MULTICAST=false
+USE_MULTICAST_GROUP_MEMBERSHIP_IP=239.255.0.1
+SOCAT_PORT=3030
+```
+
+As you can notice, you can also configure the Multicast group menbership address and port.
+
+If you update the file, you will need to restart the `vcan-ec2-receiver` service using the ollwing command :
+
+```sh
+systemctl restart vcan-ec2-receiver
+```
+
+----- 
+
 ## NXP Goldbox - Creating a flash device
 
 In case of flashing the NXP GoldBox, once the **biga-build-nxp-goldbox-** pipeline is completed, you can simply go to the Artifacts S3 bucket and download the `sdcard` image. 
@@ -243,7 +267,7 @@ aws ec2 authorize-security-group-ingress --group-id <security_group_id>  --proto
 If you already created it, you can find the security_group_id this way:
 
 ```bash
-aws ec2 describe-security-groups     --filters Name=group-name,Values=*biga*      --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}"
+aws ec2 describe-security-groups --filters Name=group-name,Values=*biga*      --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}"
 ```
 
 And finally, we can launch the Graviton instance:
