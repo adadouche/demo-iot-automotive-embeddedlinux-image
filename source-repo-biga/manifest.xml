@@ -121,7 +121,7 @@
   <!-- meta-aws -->
   <remote fetch="https://github.com/aws4embeddedlinux/" name="aws4embeddedlinux" />
   <project name="meta-aws" remote="aws4embeddedlinux" path="external/meta-aws" upstream="kirkstone"
-    revision="69ce4703994cdd95d14bc89fe1e3475c4f2be090" />
+    revision="5768bcdc527328f56accf86b1f258885f5df159d" />
 
   <!-- meta-aws-iot-automotive-demo -->
   <remote fetch="https://github.com/aws4embeddedlinux/" name="aws4embeddedlinux-demo" />
